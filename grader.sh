@@ -10,24 +10,48 @@ multcases=('1' '10 10' '100 100')
 multanswers=('1' '100' '10000')
 main='[[:space:]]*int[[:space:]][[:space:]]*main'
 commentregex='[[:space:]]*//.*'
-grader_comments=''
-prefix=''
-usage_word=('add', 'multiply', 'Usage', 'calculate')
+usage_word=('add' 'multiply' 'Usage' 'calculator')
+return_statement='[[:space:]]*return[[:space:]]*0[[:space:]]*;'
+result_file='result.csv'
+
+check_usage()
+# function to check that all required words are in arg $1 
+{
+	for word in ${usage_word[@]}; do
+		if [[ $1 != *$word* ]]; then
+			return 1
+		fi
+	done
+	return 0
+}
+
+# ensure results file is present and empty
+rm $result_file &>/dev/null
+touch $result_file
 
 for dir in $(ls); do
     if [[ -d "$dir" ]]; then
         # found a directory -- inspect
         for file in $(ls $dir); do
            if [[ $file = $filename ]]; then
+
+	       # reset individual report variables
+	       grader_comments=''
+	       prefix=''
+	       this_eid=''
+
+	       # find EID using regex
                if [[ `cat $dir/$file` =~ $eid ]]; then
                    this_eid="${BASH_REMATCH[1]}"
 	       fi
-               echo eid: $this_eid
                if [[ -z $this_eid ]]; then
                    resp=$dir
+		   grader_comments="${grader_comments}${prefix}missing eid"
+		   prefix=';'
 	       else
                    resp=$this_eid
-               fi	
+               fi
+               
  	       # comment check
 	       comments=0
 	       pre_main_flag=false
@@ -44,29 +68,39 @@ for dir in $(ls); do
 	       done < $dir/$file
                    
 	       # compile
-               gcc $dir/$filename -o$dir/calculator.o
+               gcc $dir/$filename -o$dir/calculator.o &>/dev/null
                if [[ $? != 0 ]]; then
 		   # compile check
-                   grader_comments=$prefix$grader_commentscompile failed
+                   grader_comments="${grader_comments}${prefix}compile fail"
 		   prefix=';'
 		   score=0
                else
 		   score=10
-                   # run test cases
-                   echo compile successful
-
-		   # usages cases
+                   
+		   # run test cases
+	           if ! [[ `cat $dir/$file` =~ $return_statement ]]; then
+		       let "score = score - 1"
+	           fi	
+		   
+                   # usages cases
                    correct_usage=true
                    test_usage="$(./$dir/calculator.o)"
-                   for word in $usage_words; do
-                       if [[ $test_usage != *$word* ]]; then
-			   echo $word not in $test_usage
-			   correct_usage=false
-   			   break;
-                       fi
-                   done
+		   check_usage "$test_usage"
+		   
+		   if [[ $? != 0 ]]; then
+		       correct_usage=false
+		   else
+		       test_usage="$(echo 10 -10 | ./$dir/calculator.o subtract)"
+		       check_usage "$test_usage"
+		       if [[ $? != 0 ]]; then
+		           correct_usage=false
+		       fi
+                   fi
+		   if [[ $correct_usage = false ]]; then
+      		       grader_comments="${grader_comments}${prefix}usage"
+                       prefix=';'
+                   fi
 
-		   echo correct_usage: $correct_usage
 
                    # add cases
 		   for i in "${!addcases[@]}"; do
@@ -83,15 +117,23 @@ for dir in $(ls); do
 		           let "score = score - 1"
 	               fi
 	           done
-                   echo score after add, mult: $score
                fi
+
+	       # add score to output
                resp=$resp,$score
+
+               # add style check to output
                if [[ $comments > 2 ]] && [[ $pre_main_flag = true ]]; then
                    resp=$resp,ok
                else
                    resp=$resp,notok
                fi
-               echo resp: $resp
+
+               # add comments to output
+	       resp=$resp,$grader_comments
+
+               # append to results file
+	       echo $resp>>${result_file}
 	    fi
         done
     fi

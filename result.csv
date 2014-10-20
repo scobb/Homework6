@@ -1,0 +1,9 @@
+ts101,10,ok,
+noadd101,4,ok,
+nocompile101,0,ok,compile fail
+nomaincomment101,10,notok,
+nomult101,8,ok,
+noreturn1,9,ok,
+nocomments101,10,notok,
+noeid,10,ok,missing eid
+wrongusage101,10,ok,usage
