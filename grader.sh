@@ -13,8 +13,8 @@ multanswers=('1' '100' '10000')
 usage_word=('add' 'multiply' 'Usage' 'calculator')
 
 # regex
-eid='EID:([a-zA-z][a-zA-Z]*[0-9][0-9]*)'
-main='[[:space:]]*int[[:space:]][[:space:]]*main'
+eid='EID:([a-zA-z]+[0-9]+)'
+main='[[:space:]]*int[[:space:]]+main'
 commentregex='[[:space:]]*//.*'
 return_statement='[[:space:]]*return[[:space:]]*0[[:space:]]*;'
 
@@ -128,7 +128,7 @@ for dir in $(ls); do
 	           done
                fi
 	       
-	       # check for explicit return statement
+	       # check for explicit return statement so everyone can get a -1!
 	       if ! [[ `cat $dir/$file` =~ $return_statement ]]; then
 	           let "score = score - 1"
 	       fi	
