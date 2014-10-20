@@ -1,21 +1,27 @@
 #Name:Steve Cobb
 #EID:scc2448
 
-# variables for use in grading
+# IO filenames
 filename='calculator.c'
-eid='EID:([a-zA-z][a-zA-Z]*[0-9][0-9]*)'
+result_file='result.csv'
+
+# testcases
 addcases=('1' '1 1' '-1 -1' '123 456' '12 34 56 78' '1000000 1000000')
 addanswers=('1' '2' '-2' '579' '180' '2000000')
 multcases=('1' '10 10' '100 100')
 multanswers=('1' '100' '10000')
+usage_word=('add' 'multiply' 'Usage' 'calculator')
+
+# regex
+eid='EID:([a-zA-z][a-zA-Z]*[0-9][0-9]*)'
 main='[[:space:]]*int[[:space:]][[:space:]]*main'
 commentregex='[[:space:]]*//.*'
-usage_word=('add' 'multiply' 'Usage' 'calculator')
 return_statement='[[:space:]]*return[[:space:]]*0[[:space:]]*;'
-result_file='result.csv'
 
+#########################################################
 check_usage()
-# function to check that all required words are in arg $1 
+# function to check that all required words are in arg $1
+######################################################### 
 {
 	for word in ${usage_word[@]}; do
 		if [[ $1 != *$word* ]]; then
@@ -24,6 +30,9 @@ check_usage()
 	done
 	return 0
 }
+
+###########################################################
+# main processing
 
 # ensure results file is present and empty
 rm $result_file &>/dev/null
@@ -61,6 +70,7 @@ for dir in $(ls); do
                    fi
 		   if [[ $p =~ $main ]]; then
                        if [[ $prev =~ $commentregex ]]; then
+			   # check line right before main decl to see if it's a comment
                            pre_main_flag=true
                        fi
                    fi
@@ -70,39 +80,38 @@ for dir in $(ls); do
 	       # compile
                gcc $dir/$filename -o$dir/calculator.o &>/dev/null
                if [[ $? != 0 ]]; then
-		   # compile check
+		   # compile failed
                    grader_comments="${grader_comments}${prefix}compile fail"
 		   prefix=';'
 		   score=0
                else
+		   # compile succeeded, continue tests
 		   score=10
                    
-		   # run test cases
-	           if ! [[ `cat $dir/$file` =~ $return_statement ]]; then
-		       let "score = score - 1"
-	           fi	
-		   
-                   # usages cases
+		   ### run test cases ###
+	   
+                   ## usages cases ##
                    correct_usage=true
-                   test_usage="$(./$dir/calculator.o)"
-		   check_usage "$test_usage"
+                   check_usage "$(./$dir/calculator.o)"
 		   
 		   if [[ $? != 0 ]]; then
 		       correct_usage=false
-		   else
-		       test_usage="$(echo 10 -10 | ./$dir/calculator.o subtract)"
-		       check_usage "$test_usage"
-		       if [[ $? != 0 ]]; then
-		           correct_usage=false
-		       fi
+		       let "score = score - 1"
+		   fi
+		   
+		   check_usage "$(echo 10 -10 | ./$dir/calculator.o subtract)"
+		   if [[ $? != 0 ]]; then
+		       correct_usage=false
+		       let "score = score - 1"
                    fi
+
+		   # add appropriate comment if usage statement  wrong
 		   if [[ $correct_usage = false ]]; then
       		       grader_comments="${grader_comments}${prefix}usage"
                        prefix=';'
                    fi
 
-
-                   # add cases
+                   ## add cases ##
 		   for i in "${!addcases[@]}"; do
                        answer=$(echo "${addcases[$i]}" | ./$dir/calculator.o add)
                        if [[ $answer != ${addanswers[$i]} ]]; then
@@ -110,7 +119,7 @@ for dir in $(ls); do
                        fi
                    done
 
-		   # mult cases
+		   ## multiply cases ##
 		   for i in "${!multcases[@]}"; do
                        answer=$(echo "${multcases[$i]}" | ./$dir/calculator.o multiply)
                        if [[ $answer != ${multanswers[$i]} ]]; then
@@ -118,7 +127,12 @@ for dir in $(ls); do
 	               fi
 	           done
                fi
-
+	       
+	       # check for explicit return statement
+	       if ! [[ `cat $dir/$file` =~ $return_statement ]]; then
+	           let "score = score - 1"
+	       fi	
+	
 	       # add score to output
                resp=$resp,$score
 
@@ -135,6 +149,7 @@ for dir in $(ls); do
                # append to results file
 	       echo $resp>>${result_file}
 	    fi
+        
         done
     fi
 done

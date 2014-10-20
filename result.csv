@@ -6,4 +6,5 @@ nomult101,8,ok,
 noreturn1,9,ok,
 nocomments101,10,notok,
 noeid,10,ok,missing eid
-wrongusage101,10,ok,usage
+noeid_wrongusage,8,ok,missing eid;usage
+wrongusage101,8,ok,usage
