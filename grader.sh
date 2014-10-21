@@ -3,7 +3,6 @@
 
 # IO filenames
 filename='calculator.c'
-result_file='result.csv'
 
 # testcases
 addcases=('1' '1 1' '-1 -1' '123 456' '12 34 56 78' '1000000 1000000')
@@ -33,10 +32,6 @@ check_usage()
 
 ###########################################################
 # main processing
-
-# ensure results file is present and empty
-rm $result_file &>/dev/null
-touch $result_file
 
 for dir in $(ls); do
     if [[ -d "$dir" ]]; then
