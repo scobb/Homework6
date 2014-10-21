@@ -132,7 +132,12 @@ for dir in $(ls); do
 	       if ! [[ `cat $dir/$file` =~ $return_statement ]]; then
 	           let "score = score - 1"
 	       fi	
-	
+	       
+               # make sure score is not below 0
+               if [[ $score < 0 ]]; then
+		   score=0
+	       fi
+
 	       # add score to output
                resp=$resp,$score
 
@@ -147,7 +152,7 @@ for dir in $(ls); do
 	       resp=$resp,$grader_comments
 
                # append to results file
-	       echo $resp>>${result_file}
+	       echo $resp
 	    fi
         
         done
