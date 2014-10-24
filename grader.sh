@@ -16,6 +16,7 @@ eid='EID:([a-zA-z]+[0-9]+)'
 main='[[:space:]]*int[[:space:]]+main'
 commentregex='[[:space:]]*//.*'
 return_statement='[[:space:]]*return[[:space:]]*0[[:space:]]*;'
+multicomment='[[:space:]]*/\*'
 
 #########################################################
 check_usage()
@@ -62,6 +63,9 @@ for dir in $(ls); do
 	       while read p; do
                    if [[ $p =~ $commentregex ]]; then
                        let "comments = comments + 1"
+                   fi
+		   if [[ $p =~ $multicomment ]]; then
+		       let "comments = comments + 1"
                    fi
 		   if [[ $p =~ $main ]]; then
                        if [[ $prev =~ $commentregex ]]; then
