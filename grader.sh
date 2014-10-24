@@ -13,7 +13,7 @@ usage_word=('add' 'multiply' 'Usage' 'calculator')
 
 # regex
 eid='EID:([a-zA-z]+[0-9]+)'
-main='[[:space:]]*int[[:space:]]+main'
+main='[[:space:]]*int[[:space:]]+main[[:space:]]*\('
 commentregex='[[:space:]]*//.*'
 return_statement='[[:space:]]*return[[:space:]]*0[[:space:]]*;'
 multicomment='[[:space:]]*/\*'
