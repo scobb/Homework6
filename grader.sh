@@ -141,7 +141,7 @@ for dir in $(ls); do
                resp=$resp,$score
 
                # add style check to output
-               if [[ $comments > 2 ]] && [[ $pre_main_flag = true ]]; then
+               if [[ $comments -gt 2 ]] && [[ $pre_main_flag = true ]]; then
                    resp=$resp,ok
                else
                    resp=$resp,notok
